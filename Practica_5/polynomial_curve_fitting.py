@@ -29,6 +29,8 @@ def polynomial_curve_fitting(points, knots, method, L=0, libraries=False,
            at the evenly spaced num_points between tau[0] and tau[-1]
     '''
 
+    if knots=='chebyshev': knots=chebyshev_knots(0, 1, points.shape[0])
+
     curve_x = polynomial_curve_fitting1d(points[:,0],knots,method,L,libraries,num_points)
     curve_y = polynomial_curve_fitting1d(points[:,1],knots,method,L,libraries,num_points)
 
@@ -59,49 +61,50 @@ def newton_polynomial(x, tau, num_points=100, libraries=False):
         coefs = cache[0,:]
         #print coefs
         points = np.linspace(tau[0], tau[-1], num_points)
-        polynomial = coefs[N-1]
-        for k in range(N-2,-1,-1):
-            #print polynomial
-            polynomial = coefs[k] + (points-tau[k])*polynomial
-        
-        #print polynomial     
+        polynomial = eval_poly(points,coefs,tau)     
         return polynomial #np.array of size num_points
     else: #Usamos cualquier libreria
         coefs = np.polyfit(tau,x,tau.size-1)
-	points = np.linspace(tau[0], tau[-1], num_points)
-	polynomial = np.polyval(coefs,points)
+        points = np.linspace(tau[0], tau[-1], num_points)
+        polynomial = np.polyval(coefs,points)
 
 	#print polynomial
-	return polynomial        
+        return polynomial        
 	#return another_polynomial #np.array of size num_points
 
 def eval_poly(t, coefs, tau=None):    
-    pass
+    N = coefs.size
+    if tau==None: tau=np.zeros(N)
+    poly = coefs[-1]
+    for i in range(2,N+1):
+        poly = coefs[-i] + (t-tau[-i])*poly
+    return poly
         
 def least_squares_fitting(points, knots, num_points, L=0, libraries=True):    
     #I've used np.linalg.lstsq and np.polyval if libraries==True
 
     if not libraries:
-	k = points.size
-	m = knots.size
-	C = np.zeros((m,k))
-	C[:,0]=1
-	for i in range(1,k):
-	    C[:,i]=C[:,i-1]*knots
+        k = points.size
+        m = knots.size
+        C = np.zeros((m,k))
+        C[:,0]=1
+        for i in range(1,k):
+            C[:,i]=C[:,i-1]*knots
 
-	coefs = np.linalg.solve(C,points)
-        polynomial = np.polyval(coefs,points)
-        #t = np.linspace(knots[0], knots[-1], num_points)
-        #polynomial = coefs[k-1]
-        #for i in range(k-2,-1,-1):
-        #    polynomial = coefs[i] + (t-knots[i])*polynomial
-
-	return polynomial	
+        H = np.dot(C.transpose(),C) + (L/2.0)*np.eye(k)
+        coefs = np.linalg.solve(H,np.dot(C.transpose(),points))
+        t = np.linspace(knots[0], knots[-1], num_points)
+        polynomial = eval_poly(t,coefs)
+        return polynomial	
 
     else:
-    	C = np.vander(knots,points.size,increasing=True)
-	coefs = np.linalg.lstsq(C,points)
-	polynomial = np.polyval(coefs,points)
+        C = np.vander(knots,points.size)
+        (coefs,_,_,_) = np.linalg.lstsq(C,points)
+        t = np.linspace(knots[0], knots[-1], num_points)
+        polynomial = np.polyval(coefs,t)
+        return polynomial
         
 def chebyshev_knots(a, b, n):
-    pass
+    t=np.arange(1,n+1)
+    t=(a+b-(a-b)*np.cos((2*t-1)*np.pi/(2.0*n)))/2.0
+    return t
