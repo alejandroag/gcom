@@ -68,6 +68,7 @@ class DrawPoints:
 	self.points = None
 	self.N = 0
 
+
 class Window:
 
 	def start(self,root,fig,ax):
@@ -139,7 +140,6 @@ class Window:
 		else:
 			knots = np.linspace(0, 1, N)
 		x = self.draw_points.getPoints()
-		knots = np.linspace(0, 1, N)
 		num_points = 200
 		poly = polynomial_curve_fitting(x, knots, method='newton',
 		                      libraries=False, num_points=num_points)
@@ -147,9 +147,11 @@ class Window:
 		
 	def newtonlib(self):	
 		N = self.draw_points.getN() 
-		#x = np.random.randint(-10, 10, size=(N, 2)) #la q cogemos de points
 		x = self.draw_points.getPoints()
-		knots = np.linspace(0, 1, N)
+		if self.vChev.get():
+			knots = 'chebyshev'
+		else:
+			knots = np.linspace(0, 1, N)
 		num_points = 200
 		poly = polynomial_curve_fitting(x, knots, method='newton',
 		                      libraries=True, num_points=num_points)	
@@ -160,7 +162,10 @@ class Window:
 		self.getL()
 		N = self.draw_points.getN() 
 		x = self.draw_points.getPoints()
-		knots = np.linspace(0, 1, N)
+		if self.vChev.get():
+			knots = 'chebyshev'
+		else:
+			knots = np.linspace(0, 1, N)
 		num_points = 200
 		
 		poly = polynomial_curve_fitting(x, knots, method='least_squares', L=self.L,
@@ -171,7 +176,10 @@ class Window:
 		self.getD()
 		N = self.draw_points.getN() 
 		x = self.draw_points.getPoints()
-		knots = np.linspace(0, 1, N)
+		if self.vChev.get():
+			knots = 'chebyshev'
+		else:
+			knots = np.linspace(0, 1, N)
 		num_points = 200
 	
 		poly = polynomial_curve_fitting(x, knots, method='least_squares',
@@ -224,7 +232,7 @@ if __name__ == '__main__':
 
 	toolbar = NavigationToolbar2TkAgg( canvas, root )
 	toolbar.update()
-	canvas._tkcanvas.pack()#side=Tk.LEFT, fill=Tk.X
+	canvas._tkcanvas.pack()
 	toolbar = Tk.Frame(root)
 	toolbar.pack(side=Tk.BOTTOM, fill="x")
 	
