@@ -45,7 +45,7 @@ def test_least_squares_fitting_degree():
     n = 10  
     x = np.array([[-7, -4], [-3, -1], [1, 2], [2, 4], [2.6, 3], [4, 1],
                   [10, 1], [12, 1], [12.4, -11], [20, -1]])
-    list_L = range(5,11)
+    list_L = range(1,10)
     print list_L
     knots = np.linspace(0, 1, n)
     num_points = 200
@@ -127,8 +127,8 @@ num_points = 200
 if __name__ == '__main__':
     
     test_least_squares_fitting()
-    #test_least_squares_fitting_regularized()
+    test_least_squares_fitting_regularized()
     test_least_squares_fitting_degree()
-    #test_newton_poly_cheb()
-    #test_newton_poly()
-    #timing_curve_fitting()
+    test_newton_poly_cheb()
+    test_newton_poly()
+    timing_curve_fitting()

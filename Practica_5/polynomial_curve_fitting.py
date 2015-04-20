@@ -76,7 +76,7 @@ def newton_polynomial(x, tau, num_points=100, libraries=False):
 def eval_poly(t, coefs, tau=None):    
     N = coefs.size
     if tau==None: tau=np.zeros(N)
-    poly = coefs[-1]
+    poly = coefs[-1]*np.ones(t.size)
     for i in range(2,N+1):
         poly = coefs[-i] + (t-tau[-i])*poly
     return poly
@@ -84,23 +84,23 @@ def eval_poly(t, coefs, tau=None):
 def least_squares_fitting(points, knots, num_points, L=0, libraries=True, degree=None):    
     #I've used np.linalg.lstsq and np.polyval if libraries==True
 
-    if degree==None or degree>points.size: degree=points.size
+    if degree==None: degree=points.size-1
 
     if not libraries:
         m = points.size
-        C = np.zeros((m,degree))
+        C = np.zeros((m,degree+1))
         C[:,0]=1
-        for i in range(1,degree):
+        for i in range(1,degree+1):
             C[:,i]=C[:,i-1]*knots
 
-        H = np.dot(C.transpose(),C) + (L/2.0)*np.eye(degree)
+        H = np.dot(C.transpose(),C) + (L/2.0)*np.eye(degree+1)
         coefs = np.linalg.solve(H,np.dot(C.transpose(),points))
         t = np.linspace(knots[0], knots[-1], num_points)
         polynomial = eval_poly(t,coefs)
         return polynomial	
 
     else:
-        C = np.vander(knots,degree)
+        C = np.vander(knots,degree+1)
         (coefs,_,_,_) = np.linalg.lstsq(C,points)
         t = np.linspace(knots[0], knots[-1], num_points)
         polynomial = np.polyval(coefs,t)
@@ -110,3 +110,4 @@ def chebyshev_knots(a, b, n):
     t=np.arange(1,n+1)
     t=(a+b-(a-b)*np.cos((2*t-1)*np.pi/(2.0*n)))/2.0
     return t
+
