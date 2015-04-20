@@ -31,7 +31,6 @@ class DrawPoints:
         c = Circle((event.xdata, event.ydata), 0.2, color='b')
         patch=self.ax.add_patch(c)
 	self.patchList.append(patch)
-        print self.patchList
         ar = np.array([[event.xdata,event.ydata]])
         if self.points != None:
 		self.points = np.concatenate((self.points,ar),axis=0)
@@ -60,7 +59,6 @@ class DrawPoints:
 			c = Circle((x[i,0], x[i,1]), 0.2, color='b')
         		patch=self.ax.add_patch(c)
 			self.patchList.append(patch)
-		#plt.plot(x[:, 0], x[:, 1],'o')
 		return x
 
     def clearPoints(self):
@@ -112,9 +110,11 @@ class Window:
 		bls_lib = Tk.Button(master=root, text='Least sq lib', command=self.lslib) 
 		bls_lib.place(x=545, y=190)
 		
-		#bchev = Tk.
+		self.vChev = Tk.IntVar()
+		bchev = Tk.Checkbutton(master=root, text='Chebyshev', variable=self.vChev, font=("Helvetica", 12), bg = 'silver')
+		bchev.place(x=445, y=240)
 		bclear = Tk.Button(master=root, text='Clear', command=self.clear) 
-		bclear.place(x=445, y=250)
+		bclear.place(x=445, y=380)
 		
 		self.draw_points = DrawPoints(fig, ax)
 		canvas.mpl_connect('key_press_event', self.draw_points)
@@ -124,7 +124,6 @@ class Window:
 		self.curve = Line2D(poly[:, 0], poly[:, 1])
 		self.control= Line2D(x[:, 0], x[:, 1])
 		self.curve.set_color(color)
-		#self.ax.add_line(self.control)
 		self.ax.add_line(self.curve)
 		self.fig.canvas.draw()
 
@@ -135,28 +134,25 @@ class Window:
 		
 	def newton(self):
 		N = self.draw_points.getN() 	
-		knots = np.linspace(0, 1, N)
-		#x = np.random.randint(-10, 10, size=(N, 2)) #la q cogemos de points
+		if self.vChev.get():
+			knots = 'chebyshev'
+		else:
+			knots = np.linspace(0, 1, N)
 		x = self.draw_points.getPoints()
 		knots = np.linspace(0, 1, N)
 		num_points = 200
 		poly = polynomial_curve_fitting(x, knots, method='newton',
 		                      libraries=False, num_points=num_points)
-		#plt.figure()
-		
 		self.draw(poly,x,'cyan')
 		
-
-	def newtonlib(self):
-	
+	def newtonlib(self):	
 		N = self.draw_points.getN() 
 		#x = np.random.randint(-10, 10, size=(N, 2)) #la q cogemos de points
 		x = self.draw_points.getPoints()
 		knots = np.linspace(0, 1, N)
 		num_points = 200
 		poly = polynomial_curve_fitting(x, knots, method='newton',
-		                      libraries=True, num_points=num_points)
-		#plt.plot(x[:, 0], x[:, 1],'o')		
+		                      libraries=True, num_points=num_points)	
 		self.draw(poly,x,'navy')
 
 	def ls(self):
@@ -169,7 +165,6 @@ class Window:
 		
 		poly = polynomial_curve_fitting(x, knots, method='least_squares', L=self.L,
                                       libraries=False, num_points=num_points, degree=self.degree)		
-			
 		self.draw(poly,x,'r')
 
 	def lslib(self):
@@ -178,10 +173,9 @@ class Window:
 		x = self.draw_points.getPoints()
 		knots = np.linspace(0, 1, N)
 		num_points = 200
-		
+	
 		poly = polynomial_curve_fitting(x, knots, method='least_squares',
-                                      libraries=True, num_points=num_points, degree=self.degree)
-				
+                                      libraries=True, num_points=num_points, degree=self.degree)	
 		self.draw(poly,x,'crimson')
 
 	def clear(self):
@@ -193,24 +187,14 @@ class Window:
 	    print('you pressed %s'%event.key)
 	    key_press_handler(event, canvas, toolbar)
 
-
-
 	def quit(self):
 	    root.quit()     # stops mainloop
 	    root.destroy()  # this is necessary on Windows to prevent
 		            # Fatal Python Error: PyEval_RestoreThread: NULL tstate
 
-
-
-
-	'''
-	text = Tk.Text(root)
-	text.insert(Tk.END, "Method")
-	text.place(x=100, y=160)
-	'''
-
 	def getN(self, event):
 		self.N = self.vN.get()
+
 	def getD(self):
 		if self.vD.get() != "":	
 			self.degree = int(self.vD.get())
@@ -222,8 +206,6 @@ class Window:
 			self.L = float(self.vL.get())
 		else:
 			self.L = 0
-
-		
 
 
 
