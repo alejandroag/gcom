@@ -5,24 +5,25 @@ import matplotlib.pyplot as plt
 
 
 def polynomial_curve_fitting(points, knots, method, L=0, libraries=False,
-                             num_points=100):    
+                             num_points=100, degree=None):    
     '''
        Fits planar curve to points at given knots. 
 
        Arguments:
            points -- coordinates of points to adjust (x_i, y_i) given by a numpy array of shape (N, 2)
            knots -- strictly increasing sequence at which the curve will fit the points, tau_i
-               It is given by a np.array of shape M, unless knots='chebyshev', in this case
+               It is given by a np.array of shape N, unless knots='chebyshev', in this case
                    N Chebyshev's nodes between 0 and 1 will be used instead of tau.
            method -- one of the following: 
-               'newton' computes the interpolating polynomial curve using Newton's method.
-                   returns error if N!=M. 
+               'newton' computes the interpolating polynomial curve using Newton's method. 
                'least_squares' computes the best adjusting curve in the least square sense,
                    i.e., min_a ||Ca - b||**2 + L/2 ||a||**2
            L -- regularization parameter
            libraries -- If False, only numpy linear algebra operations are allowed. 
                If True, any module can be used. In this case, a very short and fast code is expected
            num_points -- number of points to plot between tau[0] and tau[-1]
+           degree -- degree of the polynomial. Needed only if method='least_squares'.
+                     If degree=None, the function will return the interpolating polynomial.
 
        Returns:
            numpy array of shape (num_points, 2) given by the evaluation of the polynomial
@@ -31,19 +32,19 @@ def polynomial_curve_fitting(points, knots, method, L=0, libraries=False,
 
     if knots=='chebyshev': knots=chebyshev_knots(0, 1, points.shape[0])
 
-    curve_x = polynomial_curve_fitting1d(points[:,0],knots,method,L,libraries,num_points)
-    curve_y = polynomial_curve_fitting1d(points[:,1],knots,method,L,libraries,num_points)
+    curve_x = polynomial_curve_fitting1d(points[:,0],knots,method,L,libraries,num_points,degree)
+    curve_y = polynomial_curve_fitting1d(points[:,1],knots,method,L,libraries,num_points,degree)
 
     return np.array([curve_x,curve_y]).transpose()
 
 def polynomial_curve_fitting1d(points, knots, method, L=0, libraries=False,
-                             num_points=100):    
+                             num_points=100, degree=None):    
     if method=='newton':
 	return newton_polynomial(points,knots,num_points,libraries)
 
 
     elif method=='least_squares':
-	return least_squares_fitting(points,knots,num_points,L,libraries)
+	return least_squares_fitting(points,knots,num_points,L,libraries,degree)
 
 def newton_polynomial(x, tau, num_points=100, libraries=False):    
     #I've used polyfit and polyval if libraries==True
@@ -80,25 +81,26 @@ def eval_poly(t, coefs, tau=None):
         poly = coefs[-i] + (t-tau[-i])*poly
     return poly
         
-def least_squares_fitting(points, knots, num_points, L=0, libraries=True):    
+def least_squares_fitting(points, knots, num_points, L=0, libraries=True, degree=None):    
     #I've used np.linalg.lstsq and np.polyval if libraries==True
 
+    if degree==None or degree>points.size: degree=points.size
+
     if not libraries:
-        k = points.size
-        m = knots.size
-        C = np.zeros((m,k))
+        m = points.size
+        C = np.zeros((m,degree))
         C[:,0]=1
-        for i in range(1,k):
+        for i in range(1,degree):
             C[:,i]=C[:,i-1]*knots
 
-        H = np.dot(C.transpose(),C) + (L/2.0)*np.eye(k)
+        H = np.dot(C.transpose(),C) + (L/2.0)*np.eye(degree)
         coefs = np.linalg.solve(H,np.dot(C.transpose(),points))
         t = np.linspace(knots[0], knots[-1], num_points)
         polynomial = eval_poly(t,coefs)
         return polynomial	
 
     else:
-        C = np.vander(knots,points.size)
+        C = np.vander(knots,degree)
         (coefs,_,_,_) = np.linalg.lstsq(C,points)
         t = np.linspace(knots[0], knots[-1], num_points)
         polynomial = np.polyval(coefs,t)

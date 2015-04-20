@@ -41,6 +41,24 @@ def test_least_squares_fitting_regularized():
     
     plt.show()  
     
+def test_least_squares_fitting_degree():
+    n = 10  
+    x = np.array([[-7, -4], [-3, -1], [1, 2], [2, 4], [2.6, 3], [4, 1],
+                  [10, 1], [12, 1], [12.4, -11], [20, -1]])
+    list_L = range(5,11)
+    print list_L
+    knots = np.linspace(0, 1, n)
+    num_points = 200
+             
+    for L in list_L:
+        poly = polynomial_curve_fitting(x, knots, method='least_squares',
+                                      libraries=False, num_points=num_points,degree=L)
+        print poly
+        plt.plot(poly[:, 0], poly[:, 1])
+    plt.plot(x[:, 0], x[:, 1], 'o')
+    
+    plt.show()  
+
 
 def test_newton_poly_cheb():
     n = 15  
@@ -109,7 +127,8 @@ num_points = 200
 if __name__ == '__main__':
     
     test_least_squares_fitting()
-    test_least_squares_fitting_regularized()
-    test_newton_poly_cheb()
-    test_newton_poly()
-    timing_curve_fitting()
+    #test_least_squares_fitting_regularized()
+    test_least_squares_fitting_degree()
+    #test_newton_poly_cheb()
+    #test_newton_poly()
+    #timing_curve_fitting()
